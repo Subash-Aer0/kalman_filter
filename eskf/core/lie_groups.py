@@ -1,6 +1,7 @@
 """Lie groups for rotation and transformation matrices."""
 
 import numpy as np
+from utils.rotations import Quaternion
 
 
 class SO3:
@@ -22,13 +23,13 @@ class SO3:
             Quaternion (4, 1)
         """
         phi_norm = np.linalg.norm(phi)
-        theta = phi / 2
+        theta = phi_norm / 2
 
         if phi_norm < 1e-8:
             return np.array([1, phi[0] / 2, phi[1] / 2, phi[2] / 2])
 
         axis = phi / phi_norm
-
+        print(axis)
         q = np.array(
             [
                 np.cos(theta),
@@ -62,6 +63,38 @@ class SO3:
         axis = qv / qv_norm
 
         return phi * axis
+
+    @staticmethod
+    def integrate(q: Quaternion, dtheta) -> Quaternion:
+        """
+        Zeroth order integration for the quaternion q
+
+        Parameters
+        ----------
+        q: Quaternion Quaternion to integrate
+        dtheta: NDArray
+
+        Returns
+        -------
+        q_k+1 = q * dtheta
+        """
+
+        dtheta_exp = SO3.exp(dtheta)
+
+        q_next = Quaternion.multiply(q, Quaternion(dtheta_exp))
+
+        return q_next
+
+    @staticmethod
+    def skew_matrix(omega):
+
+        return np.array(
+            [
+                [0, -omega[2], omega[1]],
+                [omega[2], 0, -omega[1]],
+                [-omega[2], omega[1], 0],
+            ]
+        )
 
 
 class SE3:
